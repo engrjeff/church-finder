@@ -28,6 +28,98 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Cross1Icon } from "@radix-ui/react-icons";
 
+const basicInfoSchema = z.object({
+  name: z
+    .string({ required_error: "Church name is required." })
+    .nonempty({ message: "Church name is required." }),
+  pastor_name: z
+    .string({ required_error: "Pastor's name is required." })
+    .nonempty({ message: "Pastor's name is required." }),
+  address: z.object({
+    region: z.string(),
+    province: z.string(),
+    town: z.string(),
+    street: z.string(),
+  }),
+  welcome_message: z.string(),
+  logo: z.string(),
+});
+
+const churchProfileSchema = z.object({
+  church_size: z.number().int().positive(),
+  communion_frequency: z.enum(["Weekly", "Monthly", "Occasionally"]),
+  confessions: z.array(
+    z.object({
+      title: z.string(),
+    })
+  ),
+  ministries: z.array(
+    z.object({
+      title: z.string(),
+    })
+  ),
+  public_services: z.array(
+    z.object({
+      title: z.string(),
+    })
+  ),
+  services: z
+    .array(
+      z.object({
+        title: z
+          .string({ required_error: "Service title is required." })
+          .nonempty({ message: "Service title is required." }),
+        day: z
+          .string({ required_error: "Service day is required." })
+          .nonempty({ message: "Service day is required." }),
+        time: z
+          .string({ required_error: "Service time is required." })
+          .nonempty({ message: "Service time is required." }),
+      })
+    )
+    .min(1, { message: "Enter at least 1 service schedule." }),
+  mission: z.string(),
+  vision: z.string(),
+});
+
+const churchContactSchema = z.object({
+  email: z.string().email({ message: "Enter a valid email." }).optional(),
+  website: z.string().url({ message: "Enter a valid website url." }).optional(),
+  contactNumbers: z
+    .array(
+      z.object({
+        value: z
+          .string({ required_error: "Contact number is required." })
+          .nonempty({ message: "Contact number is required." }),
+      })
+    )
+    .min(1, { message: "Enter at least 1 contact number." }),
+  socialLinks: z
+    .array(
+      z.object({
+        url: z
+          .string({ required_error: "Social link address is required." })
+          .url({ message: "Enter a valid url." }),
+        platform: z
+          .string({ required_error: "Platform is required." })
+          .nonempty({ message: "Platform is required." }),
+      })
+    )
+    .optional(),
+});
+
+const pastorProfileSchema = z.object({
+  bio: z.string(),
+  photo: z.string(),
+});
+
+const churchSchema = basicInfoSchema
+  .merge(churchProfileSchema)
+  .merge(churchContactSchema)
+  .merge(pastorProfileSchema);
+
+type ChurchFormData = z.infer<typeof churchSchema>;
+
 const churchFormSchema = z.object({
   name: z
     .string({ required_error: "Church name is required." })
@@ -125,13 +217,6 @@ export default function ChurchForm() {
 
   return (
     <>
-      <div className='space-y-0.5'>
-        <h2 className='text-2xl font-bold tracking-tight'>Add Your Church</h2>
-        <p className='text-muted-foreground'>
-          Let your church be found by others by adding it first.
-        </p>
-      </div>
-      <Separator className='my-6' />
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit, onError)}
@@ -150,6 +235,97 @@ export default function ChurchForm() {
               </FormItem>
             )}
           />
+          <div className='space-y-3'>
+            <Label>Church Address</Label>
+            <div className='flex flex-col md:flex-row gap-4'>
+              <FormField
+                control={form.control}
+                name='address'
+                render={({ field }) => (
+                  <FormItem className='flex-1'>
+                    <FormDescription>Region</FormDescription>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select a region' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value='Region 1'>Region 1</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='address'
+                render={({ field }) => (
+                  <FormItem className='flex-1'>
+                    <FormDescription>Province</FormDescription>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select a province' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value='Province 1'>Province 1</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='address'
+                render={({ field }) => (
+                  <FormItem className='flex-1'>
+                    <FormDescription>Town</FormDescription>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select a town' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value='Town 1'>Town 1</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormField
+              control={form.control}
+              name='address'
+              render={({ field }) => (
+                <FormItem>
+                  <FormDescription>Barangay and Street Address</FormDescription>
+                  <FormControl>
+                    <Textarea
+                      placeholder='e.g. Peter Street, Brgy. San Jose'
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
           <FormField
             control={form.control}
             name='pastor_name'
@@ -163,19 +339,7 @@ export default function ChurchForm() {
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name='address'
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Church Address</FormLabel>
-                <FormControl>
-                  <Textarea placeholder='Enter the church address' {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+
           <div className='space-y-3'>
             <Label>Services</Label>
             {services.fields.map((field, index) => (

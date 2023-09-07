@@ -37,7 +37,30 @@ function AuthButtonsClient({
     router.refresh();
   };
 
-  if (!session) return <Button onClick={handleSignIn}>Sign In</Button>;
+  if (!session)
+    return (
+      <>
+        <div className='flex items-center gap-6'>
+          <div className='flex items-center'>
+            <Link className={buttonVariants({ variant: "ghost" })} href='/'>
+              Browse Churches
+            </Link>
+            <Link
+              className={buttonVariants({ variant: "outline" })}
+              href='/my-church/new'
+            >
+              Add My Church
+            </Link>
+          </div>
+          <Button
+            className='shadow-none uppercase h-12 px-10'
+            onClick={handleSignIn}
+          >
+            Sign In
+          </Button>
+        </div>
+      </>
+    );
 
   return (
     <div className='flex items-center gap-6'>

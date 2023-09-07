@@ -10,6 +10,8 @@ export async function middleware(req: NextRequest) {
 
   if (!session) return NextResponse.redirect(new URL("/", req.url));
 
+  console.log(session);
+
   return res;
 }
 
