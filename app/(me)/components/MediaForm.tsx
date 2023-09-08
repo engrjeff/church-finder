@@ -36,6 +36,8 @@ function MediaForm() {
     control: form.control,
   });
 
+  const galleryPhotos = form.watch("gallery");
+
   const onSubmit: SubmitHandler<ChurchMediaData> = (values) => {
     console.log(values);
   };
@@ -62,8 +64,9 @@ function MediaForm() {
               <FormControl>
                 <FileDropZone
                   fileData={field.value}
+                  onRemoveExisting={galleryValues.remove}
                   onSave={(data) => {
-                    galleryValues.append(data);
+                    form.setValue("gallery", data);
                   }}
                 />
               </FormControl>

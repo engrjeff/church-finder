@@ -58,7 +58,7 @@ export const getBarangaysByCity = async (
 const getAllProvinces = async () => {
   const regions = await getRegions();
 
-  const provinces = Promise.all(
+  const provinces = await Promise.all(
     regions.map(async (region) => {
       const provincesOfRegion = await getProvincesByRegion(region.region_code);
       return provincesOfRegion;
