@@ -54,3 +54,16 @@ export const getBarangaysByCity = async (
   const barangayArr = await phil.barangays(cityCode);
   return barangayArr;
 };
+
+const getAllProvinces = async () => {
+  const regions = await getRegions();
+
+  const provinces = Promise.all(
+    regions.map(async (region) => {
+      const provincesOfRegion = await getProvincesByRegion(region.region_code);
+      return provincesOfRegion;
+    })
+  ).then((values) => values.flat());
+
+  return provinces;
+};
