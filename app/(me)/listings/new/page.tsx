@@ -11,7 +11,7 @@ import ChurchForm from "../../components/ChurchForm";
 function NewListingPage() {
   return (
     <>
-      <div className='sticky top-16 flex items-center gap-2 h-14 py-2 bg-background px-4 border-b text-sm'>
+      <div className='sticky top-16 flex items-center gap-2 h-14 py-2 bg-background px-4 border-b text-sm z-20'>
         <Link
           href='/listings'
           className='flex items-center text-muted-foreground hover:text-foreground'

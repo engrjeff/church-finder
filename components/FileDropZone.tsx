@@ -24,6 +24,7 @@ interface FileDropZoneProps {
   fileData?: FileItem[];
   onSave: (fileData: FileItem[]) => void;
   onRemoveExisting: (index: number) => void;
+  onClearAll: () => void;
   maxItems?: number;
 }
 
@@ -31,11 +32,14 @@ function FileDropZone({
   fileData,
   onSave,
   onRemoveExisting,
+  onClearAll,
   maxItems = 4,
 }: FileDropZoneProps) {
-  const [files, filesMethods] = useList<FileItem>([]);
+  const [files, filesMethods] = useList<File>([]);
 
   const { uploadFiles, loading } = useFileUpload();
+
+  const existingFileNames = new Set(fileData?.map((f) => f.name));
 
   const {
     acceptedFiles,
@@ -50,39 +54,33 @@ function FileDropZone({
     },
 
     onDrop: (acceptedFiles) => {
-      const filesToAppend = acceptedFiles.map((file) => {
-        return {
-          name: file.name,
-          size: file.size,
-          url: URL.createObjectURL(file),
-          type: "image",
-        };
-      });
+      // const filesToAppend = acceptedFiles.map((file) => {
+      //   return {
+      //     name: file.name,
+      //     size: file.size,
+      //     url: URL.createObjectURL(file),
+      //     type: "image",
+      //   };
+      // });
 
       // avoid duplicates
-      if (fileData) {
-        filesMethods.set(
-          removeDuplicates([...files, ...fileData, ...filesToAppend], "name")
-        );
-      } else {
-        filesMethods.set(
-          removeDuplicates([...files, ...filesToAppend], "name")
-        );
-      }
+      const fileItems = [...files, ...acceptedFiles].filter(
+        (f) => !existingFileNames.has(f.name)
+      );
+      filesMethods.set(removeDuplicates(fileItems, "name"));
     },
   });
 
-  React.useEffect(() => {
-    // Make sure to revoke the data uris to avoid memory leaks, will run on unmount
-    return () => files.forEach((file) => URL.revokeObjectURL(file.url));
-  }, [files]);
+  console.log({ files });
 
   const handleUpload = async () => {
     const uniqueFilesFromCurrent = new Set(fileData?.map((f) => f.name));
 
-    const toBeUploaded = acceptedFiles.filter(
+    const toBeUploaded = files.filter(
       (f) => !uniqueFilesFromCurrent.has(f.name)
     );
+
+    console.log(toBeUploaded.length);
 
     const uploadedFiles = await uploadFiles(toBeUploaded);
 
@@ -101,6 +99,14 @@ function FileDropZone({
 
   const currentTotal = fileData ? fileData.length + files.length : files.length;
 
+  const alertShown =
+    fileRejections.length > maxItems || currentTotal > maxItems;
+
+  const clearAll = () => {
+    onClearAll();
+    filesMethods.clear();
+  };
+
   return (
     <div>
       <div
@@ -108,7 +114,7 @@ function FileDropZone({
         className={cn(
           "py-10 border border-dashed text-center rounded transition-colors hover:border-primary hover:bg-primary/20",
           isDragActive ? "border-primary bg-primary/20" : "",
-          maxItems === currentTotal ? "pointer-events-none opacity-60" : ""
+          currentTotal >= maxItems ? "pointer-events-none opacity-60" : ""
         )}
       >
         <input {...getInputProps()} />
@@ -116,7 +122,7 @@ function FileDropZone({
         <em className='text-sm text-muted-foreground'>(Maximum of 4 images)</em>
       </div>
 
-      {fileRejections.length >= maxItems ? (
+      {alertShown ? (
         <Alert className='mt-6 border border-amber-600 text-amber-600 bg-amber-600/10'>
           <AlertTitle>
             <ExclamationTriangleIcon className='h-4 w-4 inline mr-2' />
@@ -132,19 +138,22 @@ function FileDropZone({
         {fileData?.map((file, index) => (
           <li key={file.name}>
             <ImageListItem
-              fileItem={file}
+              fileItem={file as unknown as File}
+              url={file.url}
               onRemove={() => onRemoveExisting(index)}
             />
           </li>
         ))}
-        {files.map((file, index) => (
-          <li key={file.name}>
-            <ImageListItem
-              fileItem={file}
-              onRemove={() => filesMethods.removeAt(index)}
-            />
-          </li>
-        ))}
+        {files
+          .filter((f) => !existingFileNames.has(f.name))
+          .map((file, index) => (
+            <li key={file.name}>
+              <ImageListItem
+                fileItem={file}
+                onRemove={() => filesMethods.removeAt(index)}
+              />
+            </li>
+          ))}
       </ul>
 
       <div className='space-x-4 pt-4 flex justify-end'>
@@ -153,16 +162,16 @@ function FileDropZone({
           variant='ghost'
           size='lg'
           className='shadow-none'
-          onClick={filesMethods.clear}
+          onClick={clearAll}
           disabled={loading}
         >
-          Clear
+          Clear All
         </Button>
         <Button
           type='button'
           size='lg'
           className='shadow-none'
-          disabled={files.length === 0 || loading}
+          disabled={files.length === 0 || loading || alertShown}
           onClick={handleUpload}
         >
           {loading ? "Uploading..." : "Upload"}
@@ -175,19 +184,29 @@ function FileDropZone({
 export default FileDropZone;
 
 interface ImageListItemProps {
-  fileItem: FileItem;
+  fileItem: File;
+  url?: string;
   onRemove: () => void;
 }
 
-const ImageListItem = ({ fileItem, onRemove }: ImageListItemProps) => {
+const ImageListItem = ({ fileItem, url, onRemove }: ImageListItemProps) => {
+  const previewUrl = url ? url : URL.createObjectURL(fileItem);
+
+  React.useEffect(() => {
+    // Make sure to revoke the data uris to avoid memory leaks, will run on unmount
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [previewUrl]);
+
   return (
     <div className='flex items-center gap-4 border rounded pr-4'>
       <img
         className='w-20 h-20 object-cover'
-        src={fileItem.url}
+        src={previewUrl}
         alt={fileItem.name}
         onLoad={() => {
-          URL.revokeObjectURL(fileItem.url);
+          if (url) return;
+
+          URL.revokeObjectURL(previewUrl);
         }}
       />
       <div className='p-4 space-y-3'>
