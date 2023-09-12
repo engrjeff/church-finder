@@ -2,13 +2,11 @@
 
 import db from "@/lib/db";
 
-import { type Church } from "@prisma/client";
-import { basicInfoSchema } from "@/lib/schema/church";
+import { basicInfoSchema, type BasicInfoData } from "@/lib/schema/church";
 import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
 import { redirect } from "next/navigation";
 
-export async function createChurch(churchData: any) {
+export async function createChurch(churchData: BasicInfoData) {
   try {
     const session = await getServerSession();
 

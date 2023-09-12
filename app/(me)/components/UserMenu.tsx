@@ -12,15 +12,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { useSession, signOut } from "next-auth/react";
 
 import Link from "next/link";
 
 export default function UserMenu() {
-  const profile = {
-    avatar_url: "https://jeffsegovia.dev/me.jpg",
-    name: "Jeff Segovia",
-    email: "jeff@sample.com",
-  };
+  const session = useSession();
+
+  if (!session || !session.data?.user) return null;
+
+  const { user } = session.data;
 
   return (
     <DropdownMenu>
@@ -31,16 +32,18 @@ export default function UserMenu() {
         >
           <Avatar className='h-8 w-8'>
             <AvatarImage
-              src={profile.avatar_url}
-              alt={profile.name}
+              src={user.image!}
+              alt={user.name!}
               className='object-cover'
             />
-            <AvatarFallback>
-              {profile.name
-                .split(" ")
-                .map((a) => a.charAt(0))
-                .join("")}
-            </AvatarFallback>
+            {user.name && (
+              <AvatarFallback>
+                {user.name
+                  .split(" ")
+                  .map((a) => a.charAt(0))
+                  .join("")}
+              </AvatarFallback>
+            )}
           </Avatar>
           <ChevronDownIcon className='h-4 w-4 ml-3' />
         </Button>
@@ -48,9 +51,9 @@ export default function UserMenu() {
       <DropdownMenuContent className='w-56' align='end' forceMount>
         <DropdownMenuLabel className='font-normal'>
           <div className='flex flex-col space-y-1'>
-            <p className='text-sm font-medium leading-none'>{profile.name}</p>
+            <p className='text-sm font-medium leading-none'>{user.name}</p>
             <p className='text-xs leading-none text-muted-foreground'>
-              {profile.email}
+              {user.email}
             </p>
           </div>
         </DropdownMenuLabel>
@@ -64,7 +67,7 @@ export default function UserMenu() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Log out</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => signOut()}>Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
