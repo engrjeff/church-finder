@@ -34,18 +34,17 @@ import {
 } from "@/lib/constants";
 import Autocomplete from "@/components/Autocomplete";
 import AvatarPicker from "@/components/AvatarPicker";
+import { createChurch } from "@/app/actions/church";
 
 const defaultValues: BasicInfoData = {
   name: "",
   welcome_message: "",
   logo: "",
-  address: {
-    region: "",
-    province: "",
-    town: "",
-    barangay: "",
-    street: "",
-  },
+  region: "",
+  province: "",
+  city: "",
+  barangay: "",
+  street: "",
 };
 
 function BasicInfoForm() {
@@ -60,9 +59,9 @@ function BasicInfoForm() {
   const [cities, setCities] = useState<City[]>([]);
   const [barangays, setBarangays] = useState<Barangay[]>([]);
 
-  const currentRegion = form.watch("address.region");
-  const currentProvince = form.watch("address.province");
-  const currentCity = form.watch("address.town");
+  const currentRegion = form.watch("region");
+  const currentProvince = form.watch("province");
+  const currentCity = form.watch("city");
 
   React.useEffect(() => {
     const updateOptions = async () => {
@@ -80,8 +79,8 @@ function BasicInfoForm() {
     updateOptions();
   }, [currentProvince, currentRegion, currentCity]);
 
-  const onSubmit: SubmitHandler<BasicInfoData> = (values) => {
-    console.log(values);
+  const onSubmit: SubmitHandler<BasicInfoData> = async (values) => {
+    await createChurch(values);
   };
 
   const onError: SubmitErrorHandler<BasicInfoData> = (err) => {
@@ -131,7 +130,7 @@ function BasicInfoForm() {
           <div className='flex flex-col md:flex-row gap-4'>
             <FormField
               control={form.control}
-              name='address.region'
+              name='region'
               render={({ field }) => (
                 <FormItem className='flex-1'>
                   <FormDescription>Region</FormDescription>
@@ -142,9 +141,9 @@ function BasicInfoForm() {
                     onChange={(value) => {
                       field.onChange(value);
 
-                      form.setValue("address.province", "");
-                      form.setValue("address.town", "");
-                      form.setValue("address.barangay", "");
+                      form.setValue("province", "");
+                      form.setValue("city", "");
+                      form.setValue("barangay", "");
                     }}
                     options={regions.map((i) => ({
                       value: i.region_code,
@@ -157,7 +156,7 @@ function BasicInfoForm() {
             />
             <FormField
               control={form.control}
-              name='address.province'
+              name='province'
               render={({ field }) => (
                 <FormItem className='flex-1'>
                   <FormDescription>Province</FormDescription>
@@ -168,8 +167,8 @@ function BasicInfoForm() {
                     onChange={(value) => {
                       field.onChange(value);
 
-                      form.setValue("address.town", "");
-                      form.setValue("address.barangay", "");
+                      form.setValue("city", "");
+                      form.setValue("barangay", "");
                     }}
                     options={provinces.map((i) => ({
                       value: i.province_code,
@@ -185,18 +184,18 @@ function BasicInfoForm() {
           <div className='flex flex-col md:flex-row gap-4'>
             <FormField
               control={form.control}
-              name='address.town'
+              name='city'
               render={({ field }) => (
                 <FormItem className='flex-1'>
                   <FormDescription>Town</FormDescription>
                   <Autocomplete
-                    searchText='Search town...'
-                    placeholderText='Select a town'
+                    searchText='Search town/city...'
+                    placeholderText='Select a town/city'
                     value={field.value}
                     onChange={(value) => {
                       field.onChange(value);
 
-                      form.setValue("address.barangay", "");
+                      form.setValue("barangay", "");
                     }}
                     options={cities.map((i) => ({
                       value: i.city_code,
@@ -210,7 +209,7 @@ function BasicInfoForm() {
             />
             <FormField
               control={form.control}
-              name='address.barangay'
+              name='barangay'
               render={({ field }) => (
                 <FormItem className='flex-1'>
                   <FormDescription>Barangay</FormDescription>
@@ -232,7 +231,7 @@ function BasicInfoForm() {
           </div>
           <FormField
             control={form.control}
-            name='address.street'
+            name='street'
             render={({ field }) => (
               <FormItem>
                 <FormDescription>Barangay and Street Address</FormDescription>

@@ -4,28 +4,25 @@ export const basicInfoSchema = z.object({
   name: z
     .string({ required_error: "Church name is required." })
     .nonempty({ message: "Church name is required." }),
+  region: z
+    .string({ required_error: "Region is required." })
+    .nonempty({ message: "Region is required." }),
 
-  address: z.object({
-    region: z
-      .string({ required_error: "Region is required." })
-      .nonempty({ message: "Region is required." }),
+  province: z
+    .string({ required_error: "Province is required." })
+    .nonempty({ message: "Province is required." }),
 
-    province: z
-      .string({ required_error: "Province is required." })
-      .nonempty({ message: "Province is required." }),
+  city: z
+    .string({ required_error: "Town/City is required." })
+    .nonempty({ message: "Town/City is required." }),
 
-    town: z
-      .string({ required_error: "Town/City is required." })
-      .nonempty({ message: "Town/City is required." }),
+  barangay: z
+    .string({ required_error: "Barangay is required." })
+    .nonempty({ message: "Barangay is required." }),
 
-    barangay: z
-      .string({ required_error: "Barangay is required." })
-      .nonempty({ message: "Barangay is required." }),
-
-    street: z
-      .string({ required_error: "Street Address is required." })
-      .nonempty({ message: "Street Address is required." }),
-  }),
+  street: z
+    .string({ required_error: "Street Address is required." })
+    .nonempty({ message: "Street Address is required." }),
   welcome_message: z.string().optional(),
   logo: z.string().optional(),
 });

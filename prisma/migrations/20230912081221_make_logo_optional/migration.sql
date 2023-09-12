@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "Church" ALTER COLUMN "logo" DROP NOT NULL;
+
+-- AlterTable
+ALTER TABLE "Pastor" ALTER COLUMN "photo" DROP NOT NULL,
+ALTER COLUMN "bio" DROP NOT NULL;

@@ -64,7 +64,7 @@ enum PublishStatus {
 model Church {
   id              String  @id @default(cuid())
   name            String
-  logo            String
+  logo            String?
   welcome_message String?
 
   region   String
@@ -190,10 +190,10 @@ model SocialLink {
 }
 
 model Pastor {
-  id    String @id @default(cuid())
-  photo String
+  id    String  @id @default(cuid())
+  photo String?
   name  String
-  bio   String
+  bio   String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
