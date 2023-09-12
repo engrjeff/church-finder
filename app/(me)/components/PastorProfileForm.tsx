@@ -24,6 +24,7 @@ import {
   pastorProfileSchema,
   type PastorProfileData,
 } from "@/lib/schema/church";
+import AvatarPicker from "@/components/AvatarPicker";
 
 const defaultValues: PastorProfileData = {
   pastor_name: "",
@@ -54,6 +55,23 @@ function PastorProfileForm() {
       >
         <FormField
           control={form.control}
+          name='photo'
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <AvatarPicker
+                  src={field.value}
+                  label='Photo'
+                  desc='Upload a photo'
+                  onAfterUpload={field.onChange}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
           name='pastor_name'
           render={({ field }) => (
             <FormItem>
@@ -76,19 +94,6 @@ function PastorProfileForm() {
               </FormDescription>
               <FormControl>
                 <Textarea placeholder='Enter a short bio' {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name='photo'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Photo</FormLabel>
-              <FormControl>
-                <Input type='file' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -6,34 +6,63 @@ export const basicInfoSchema = z.object({
     .nonempty({ message: "Church name is required." }),
 
   address: z.object({
-    region: z.string(),
-    province: z.string(),
-    town: z.string(),
-    barangay: z.string(),
-    street: z.string(),
+    region: z
+      .string({ required_error: "Region is required." })
+      .nonempty({ message: "Region is required." }),
+
+    province: z
+      .string({ required_error: "Province is required." })
+      .nonempty({ message: "Province is required." }),
+
+    town: z
+      .string({ required_error: "Town/City is required." })
+      .nonempty({ message: "Town/City is required." }),
+
+    barangay: z
+      .string({ required_error: "Barangay is required." })
+      .nonempty({ message: "Barangay is required." }),
+
+    street: z
+      .string({ required_error: "Street Address is required." })
+      .nonempty({ message: "Street Address is required." }),
   }),
   welcome_message: z.string().optional(),
   logo: z.string().optional(),
 });
 
 export const churchProfileSchema = z.object({
-  church_size: z.number().int().positive(),
+  church_size: z
+    .number({ required_error: "Church size is required" })
+    .int({ message: "Please enter a whole number" })
+    .positive(),
   communion_frequency: z.enum(["Weekly", "Monthly", "Occasionally"]),
-  confessions: z.array(
-    z.object({
-      title: z.string(),
-    })
-  ),
-  ministries: z.array(
-    z.object({
-      title: z.string(),
-    })
-  ),
-  public_services: z.array(
-    z.object({
-      title: z.string(),
-    })
-  ),
+  confessions: z
+    .array(
+      z.object({
+        title: z
+          .string({ required_error: "Confession title is required." })
+          .nonempty({ message: "Confession title is required." }),
+      })
+    )
+    .optional(),
+  ministries: z
+    .array(
+      z.object({
+        title: z
+          .string({ required_error: "Ministry title is required." })
+          .nonempty({ message: "Ministry title is required." }),
+      })
+    )
+    .min(3, { message: "Provide at least 3 ministries" }),
+  public_services: z
+    .array(
+      z.object({
+        title: z
+          .string({ required_error: "Public service title is required." })
+          .nonempty({ message: "Public service title is required." }),
+      })
+    )
+    .min(1, { message: "Provide at least 1 public service" }),
   services: z
     .array(
       z.object({
@@ -69,7 +98,8 @@ export const churchContactSchema = z.object({
     .array(
       z.object({
         url: z
-          .string({ required_error: "Social link address is required." })
+          .string({ required_error: "Social link url is required." })
+          .nonempty({ message: "Enter a valid url" })
           .url({ message: "Enter a valid url." }),
         platform: z
           .string({ required_error: "Platform is required." })

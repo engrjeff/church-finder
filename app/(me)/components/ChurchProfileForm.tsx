@@ -14,6 +14,8 @@ import {
   FormDescription,
   FormLabel,
   FormMessage,
+  FormArrayMessage,
+  FormFieldInfo,
 } from "@/components/ui/form";
 import {
   Select,
@@ -204,7 +206,7 @@ function ChurchProfileForm() {
           name='mission'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Mission</FormLabel>
+              <FormLabel optional>Mission</FormLabel>
               <FormControl>
                 <Textarea
                   placeholder="Your church's mission statement"
@@ -221,7 +223,7 @@ function ChurchProfileForm() {
           name='vision'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vision</FormLabel>
+              <FormLabel optional>Vision</FormLabel>
               <FormControl>
                 <Textarea
                   placeholder="Your church's vision statement"
@@ -241,7 +243,7 @@ function ChurchProfileForm() {
               <FormItem>
                 <FormLabel>Church Size</FormLabel>
                 <FormDescription>
-                  An estimate of how many attends your church.
+                  An estimate of how many attend your church.
                 </FormDescription>
                 <FormControl>
                   <Input
@@ -268,7 +270,7 @@ function ChurchProfileForm() {
               <FormItem>
                 <FormLabel>Communion Frequency</FormLabel>
                 <FormDescription>
-                  How often do you conduct the Lord&apos; Supper?
+                  How often do you conduct the Lord&apos;s Supper?
                 </FormDescription>
                 <Select
                   onValueChange={field.onChange}
@@ -295,7 +297,12 @@ function ChurchProfileForm() {
         </div>
 
         <div className='space-y-3'>
-          <Label>Church Ministries</Label>
+          <div>
+            <Label>Church Ministries</Label>
+            <FormArrayMessage
+              error={form.formState.errors.ministries?.root?.message}
+            />
+          </div>
           {ministries.fields.map((field, index) => (
             <div key={field.id} className='flex flex-col md:flex-row gap-4'>
               <FormField
@@ -333,18 +340,32 @@ function ChurchProfileForm() {
               )}
             </div>
           ))}
+
           <Button
             type='button'
             variant='secondary'
             size='sm'
-            onClick={() => ministries.append({ title: "" })}
+            onClick={async () => {
+              const hasNoError = await form.trigger(
+                `ministries.${ministries.fields.length - 1}.title`
+              );
+
+              if (!hasNoError) return;
+
+              ministries.append({ title: "" });
+            }}
           >
             Add Ministry
           </Button>
         </div>
 
         <div className='space-y-3'>
-          <Label>Public Services</Label>
+          <div>
+            <Label>Public Services</Label>
+            <FormArrayMessage
+              error={form.formState.errors.public_services?.root?.message}
+            />
+          </div>
           {public_services.fields.map((field, index) => (
             <div key={field.id} className='flex flex-col md:flex-row gap-4'>
               <FormField
@@ -382,6 +403,7 @@ function ChurchProfileForm() {
               )}
             </div>
           ))}
+
           <Button
             type='button'
             variant='secondary'
@@ -431,6 +453,9 @@ function ChurchProfileForm() {
               )}
             </div>
           ))}
+          <FormArrayMessage
+            error={form.formState.errors.confessions?.root?.message}
+          />
           <Button
             type='button'
             variant='secondary'

@@ -33,6 +33,7 @@ import {
   getRegions,
 } from "@/lib/constants";
 import Autocomplete from "@/components/Autocomplete";
+import AvatarPicker from "@/components/AvatarPicker";
 
 const defaultValues: BasicInfoData = {
   name: "",
@@ -98,9 +99,13 @@ function BasicInfoForm() {
           name='logo'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Church Logo</FormLabel>
               <FormControl>
-                <Input type='file' {...field} />
+                <AvatarPicker
+                  src={field.value}
+                  label='Church Logo'
+                  desc='Upload a church logo'
+                  onAfterUpload={field.onChange}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -248,7 +253,10 @@ function BasicInfoForm() {
           name='welcome_message'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Welcome Message</FormLabel>
+              <FormLabel optional>Welcome Message</FormLabel>
+              <FormDescription>
+                Greet your potential visitors with this message
+              </FormDescription>
               <FormControl>
                 <Textarea
                   placeholder='A welcome message for your potential guests'

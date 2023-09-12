@@ -23,7 +23,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
@@ -37,7 +36,7 @@ import { cn } from "@/lib/utils";
 
 const defaultValues: ChurchContactData = {
   email: "",
-  website: "",
+  website: undefined,
   contact_numbers: [{ value: "" }],
   social_links: [{ platform: "", url: "" }],
 };
@@ -96,7 +95,7 @@ function ChurchContactForm() {
           name='website'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Website</FormLabel>
+              <FormLabel optional>Website</FormLabel>
               <FormControl>
                 <Input
                   type='url'
