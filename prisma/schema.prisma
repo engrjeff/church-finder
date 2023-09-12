@@ -1,0 +1,203 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+
+  church_list Church[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum PublishStatus {
+  DRAFT
+  PUBLISHED
+  INACTIVE
+}
+
+// CHURCH SCHEMA
+model Church {
+  id              String  @id @default(cuid())
+  name            String
+  logo            String
+  welcome_message String?
+
+  region   String
+  province String
+  city     String
+  barangay String
+  street   String
+
+  status PublishStatus
+
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id String
+
+  profile         ChurchProfile?
+  contact_details ChurchContact?
+  pastor_details  Pastor?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ChurchProfile {
+  id                  String  @id @default(cuid())
+  mission             String?
+  vision              String?
+  church_size         Int
+  communion_frequency String
+
+  church    Church @relation(fields: [church_id], references: [id])
+  church_id String @unique
+
+  services        ChurchService[]
+  ministries      ChurchMinistry[]
+  public_services ChurchPublicService[]
+  confessions     ChurchConfession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ChurchService {
+  id    String @id @default(cuid())
+  title String
+  day   String
+  time  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  church_profile    ChurchProfile? @relation(fields: [church_profile_id], references: [id])
+  church_profile_id String?
+}
+
+model ChurchMinistry {
+  id    String @id @default(cuid())
+  title String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  church_profile    ChurchProfile? @relation(fields: [church_profile_id], references: [id])
+  church_profile_id String?
+}
+
+model ChurchPublicService {
+  id    String @id @default(cuid())
+  title String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  church_profile    ChurchProfile? @relation(fields: [church_profile_id], references: [id])
+  church_profile_id String?
+}
+
+model ChurchConfession {
+  id    String @id @default(cuid())
+  title String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  church_profile    ChurchProfile? @relation(fields: [church_profile_id], references: [id])
+  church_profile_id String?
+}
+
+model ChurchContact {
+  id      String  @id @default(cuid())
+  email   String
+  website String?
+
+  contact_numbers ChurchContactNumber[]
+  social_links    SocialLink[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  church    Church @relation(fields: [church_id], references: [id])
+  church_id String @unique
+}
+
+model ChurchContactNumber {
+  id     String @id @default(cuid())
+  number String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  church_contact    ChurchContact? @relation(fields: [church_contact_id], references: [id])
+  church_contact_id String?
+}
+
+model SocialLink {
+  id       String @id @default(cuid())
+  platform String
+  url      String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  church_contact    ChurchContact? @relation(fields: [church_contact_id], references: [id])
+  church_contact_id String?
+}
+
+model Pastor {
+  id    String @id @default(cuid())
+  photo String
+  name  String
+  bio   String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  church    Church @relation(fields: [church_id], references: [id])
+  church_id String @unique
+}
