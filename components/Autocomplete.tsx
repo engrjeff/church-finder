@@ -35,7 +35,9 @@ function Autocomplete({
 }: AutocompleteProps) {
   const [open, setOpen] = React.useState(false);
 
-  const selectedOption = options.find((option) => option.value === value);
+  const selectedOption = options.find(
+    (option) => option.value.toLowerCase() === value
+  );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -59,7 +61,18 @@ function Autocomplete({
         className='p-0 w-full max-h-[320px] overflow-y-auto'
         align='start'
       >
-        <Command>
+        <Command
+          filter={(value, search) => {
+            if (
+              options
+                .find((i) => i.value === value)
+                ?.label.toLowerCase()
+                .includes(search.toLowerCase())
+            )
+              return 1;
+            return 0;
+          }}
+        >
           <CommandInput placeholder={searchText} className='h-9' />
           <CommandEmpty>No option found.</CommandEmpty>
           <CommandGroup>

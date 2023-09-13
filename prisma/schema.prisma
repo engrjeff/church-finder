@@ -73,6 +73,8 @@ model Church {
   barangay String
   street   String
 
+  full_address String
+
   status PublishStatus
 
   user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)

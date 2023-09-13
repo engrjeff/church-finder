@@ -25,6 +25,7 @@ export const basicInfoSchema = z.object({
     .nonempty({ message: "Street Address is required." }),
   welcome_message: z.string().optional(),
   logo: z.string().optional(),
+  full_address: z.string(),
 });
 
 export const churchProfileSchema = z.object({

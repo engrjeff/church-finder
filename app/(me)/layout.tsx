@@ -4,6 +4,7 @@ import UserPageHeader from "./components/UserPageHeader";
 import UserPageSideBar from "./components/UserPageSideBar";
 
 import SessionProvider from "@/providers/SessionProvider";
+import ToastProvider from "@/providers/ToastProvider";
 
 import { siteConfig } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,7 @@ export default async function UserPageLayout({
         className={cn(siteConfig.font.sans.className, "flex bg-muted dark")}
       >
         <SessionProvider session={session}>
+          <ToastProvider />
           <UserPageSideBar />
           <div className='pl-[240px] flex-1'>
             <UserPageHeader />

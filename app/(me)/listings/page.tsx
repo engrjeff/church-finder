@@ -5,7 +5,7 @@ import Link from "next/link";
 import { HomeIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { buttonVariants } from "@/components/ui/button";
 
-function MyListingPage() {
+async function MyListingPage() {
   return (
     <>
       <div className='flex items-center gap-2 h-14 bg-background pl-4 pr-8 border-b text-sm'>

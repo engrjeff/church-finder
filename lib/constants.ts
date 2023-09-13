@@ -31,39 +31,29 @@ export interface Barangay {
 
 export const getRegions = async (): Promise<Region[]> => {
   const regionsArr = await phil.regions();
-  return regionsArr;
+  return regionsArr ?? [];
 };
 
 export const getProvincesByRegion = async (
   regionCode: string
 ): Promise<Province[]> => {
+  if (!regionCode) return [];
   const provinceArr = await phil.provinces(regionCode);
-  return provinceArr;
+  return provinceArr ?? [];
 };
 
 export const getCitiesByProvince = async (
   provinceCode: string
 ): Promise<City[]> => {
+  if (!provinceCode) return [];
   const citiesArr = await phil.cities(provinceCode);
-  return citiesArr;
+  return citiesArr ?? [];
 };
 
 export const getBarangaysByCity = async (
   cityCode: string
 ): Promise<Barangay[]> => {
+  if (!cityCode) return [];
   const barangayArr = await phil.barangays(cityCode);
-  return barangayArr;
-};
-
-const getAllProvinces = async () => {
-  const regions = await getRegions();
-
-  const provinces = await Promise.all(
-    regions.map(async (region) => {
-      const provincesOfRegion = await getProvincesByRegion(region.region_code);
-      return provincesOfRegion;
-    })
-  ).then((values) => values.flat());
-
-  return provinces;
+  return barangayArr ?? [];
 };
