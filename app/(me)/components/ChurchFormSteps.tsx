@@ -1,13 +1,8 @@
-"use client";
-
 import React from "react";
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 
-import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
+import ChurchFormStepItem from "./ChurchFormStepItem";
 
-export const formSteps = [
+const formSteps = [
   {
     label: "Basic Info",
     step: "basic-info",
@@ -34,27 +29,15 @@ export const formSteps = [
   },
 ];
 
-function ChurchFormSteps() {
-  const searchParams = useSearchParams();
-
-  const currentStep = searchParams.get("step");
-
+function ChurchFormSteps({ steps_completed }: { steps_completed?: string[] }) {
   return (
     <ul className='space-y-2'>
       {formSteps.map((item) => (
-        <li key={item.step}>
-          <Link
-            href={{ pathname: "/listings/new", query: { step: item.step } }}
-            className={cn(
-              buttonVariants({
-                variant: currentStep === item.step ? "secondary" : "link",
-              }),
-              "w-full justify-start text-foreground"
-            )}
-          >
-            {item.label}
-          </Link>
-        </li>
+        <ChurchFormStepItem
+          key={item.label}
+          stepItem={item}
+          isCompleted={steps_completed?.includes(item.step)}
+        />
       ))}
     </ul>
   );

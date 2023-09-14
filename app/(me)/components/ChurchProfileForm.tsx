@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 
 import { useFieldArray, useForm } from "react-hook-form";
 import type { SubmitHandler, SubmitErrorHandler } from "react-hook-form";
@@ -15,7 +15,6 @@ import {
   FormLabel,
   FormMessage,
   FormArrayMessage,
-  FormFieldInfo,
 } from "@/components/ui/form";
 import {
   Select,
@@ -34,9 +33,11 @@ import {
   type ChurchProfileData,
 } from "@/lib/schema/church";
 
-import Autocomplete from "@/components/Autocomplete";
 import { Cross1Icon } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
+import { createChurchProfile, updateChurchProfile } from "@/app/actions/church";
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "react-toastify";
 
 const defaultValues: ChurchProfileData = {
   church_size: 0,
@@ -55,10 +56,44 @@ const defaultValues: ChurchProfileData = {
   public_services: [{ title: "" }],
 };
 
-function ChurchProfileForm() {
+// test data
+// const defaultValues: ChurchProfileData = {
+//   church_size: 100,
+//   communion_frequency: "Weekly",
+//   vision: "Some vision",
+//   mission: "Some mission",
+//   services: [
+//     {
+//       title: "Sunday Service",
+//       day: "Sunday",
+//       time: "08:00:00",
+//     },
+//     {
+//       title: "Midweek Service",
+//       day: "Wednesday",
+//       time: "17:00:00",
+//     },
+//   ],
+//   confessions: [{ title: "Heidelberg Catechism" }],
+//   ministries: [
+//     { title: "Worship" },
+//     { title: "Ushering" },
+//     { title: "Multimedia" },
+//   ],
+//   public_services: [{ title: "Weddings" }, { title: "Dedications" }],
+// };
+
+function ChurchProfileForm({
+  churchProfileData,
+  churchProfileId,
+}: {
+  churchProfileData?: ChurchProfileData;
+  churchProfileId?: string;
+}) {
+  const router = useRouter();
   const form = useForm<ChurchProfileData>({
     resolver: zodResolver(churchProfileSchema),
-    defaultValues,
+    defaultValues: churchProfileData ? churchProfileData : defaultValues,
     mode: "onChange",
   });
 
@@ -82,8 +117,47 @@ function ChurchProfileForm() {
     control: form.control,
   });
 
-  const onSubmit: SubmitHandler<ChurchProfileData> = (values) => {
-    console.log(values);
+  const searchParams = useSearchParams();
+
+  const church_id = searchParams.get("id");
+
+  const handleSave = async (values: ChurchProfileData) => {
+    if (!church_id) return;
+
+    if (churchProfileData && churchProfileId) {
+      // edit
+      const result = await updateChurchProfile(churchProfileId, values);
+
+      if (result?.status === "success") {
+        toast.success("Church profile updated!");
+        return;
+      }
+    }
+
+    const result = await createChurchProfile(church_id, values);
+
+    if (result?.status === "success") {
+      toast.success("Church profile saved!");
+    }
+  };
+
+  const onSubmit: SubmitHandler<ChurchProfileData> = async (values) => {
+    await handleSave(values);
+
+    router.push(`/listings/edit?id=${church_id}&step=church-contact-info`, {
+      scroll: true,
+    });
+  };
+
+  const handleSaveAndExit = async () => {
+    const noError = await form.trigger();
+
+    if (!noError) return;
+
+    const values = form.getValues();
+    await handleSave(values);
+
+    router.push("/listings");
   };
 
   const onError: SubmitErrorHandler<ChurchProfileData> = (err) => {
@@ -92,170 +166,124 @@ function ChurchProfileForm() {
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit, onError)}
-        className='space-y-6'
-      >
-        <div className='space-y-3'>
-          <Label>Church Services</Label>
-          {services.fields.map((field, index) => (
-            <div key={field.id} className='flex flex-col md:flex-row gap-4'>
-              <FormField
-                control={form.control}
-                name={`services.${index}.title`}
-                render={({ field }) => (
-                  <FormItem className='max-w-[300px] md:flex-1'>
-                    <FormDescription className={cn(index !== 0 && "sr-only")}>
-                      Service Title
-                    </FormDescription>
-                    <FormControl>
-                      <Input placeholder='e.g. Sunday Service' {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name={`services.${index}.day`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormDescription className={cn(index !== 0 && "sr-only")}>
-                      Day
-                    </FormDescription>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={
-                        field.value === "" ? undefined : field.value
-                      }
-                    >
+      <form onSubmit={form.handleSubmit(onSubmit, onError)}>
+        <fieldset className='space-y-6' disabled={form.formState.isSubmitting}>
+          <div className='space-y-3'>
+            <Label>Church Services</Label>
+            {services.fields.map((field, index) => (
+              <div key={field.id} className='flex flex-col md:flex-row gap-4'>
+                <FormField
+                  control={form.control}
+                  name={`services.${index}.title`}
+                  render={({ field }) => (
+                    <FormItem className='max-w-[300px] md:flex-1'>
+                      <FormDescription className={cn(index !== 0 && "sr-only")}>
+                        Service Title
+                      </FormDescription>
                       <FormControl>
-                        <SelectTrigger className='w-[200px]'>
-                          <SelectValue placeholder='Select service day' />
-                        </SelectTrigger>
+                        <Input placeholder='e.g. Sunday Service' {...field} />
                       </FormControl>
-                      <SelectContent>
-                        {[
-                          "Sunday",
-                          "Monday",
-                          "Tuesday",
-                          "Wednesday",
-                          "Thursday",
-                          "Friday",
-                          "Saturday",
-                        ].map((day) => (
-                          <SelectItem key={day} value={day}>
-                            {day}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name={`services.${index}.time`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormDescription className={cn(index !== 0 && "sr-only")}>
-                      Time
-                    </FormDescription>
-                    <FormControl>
-                      <Input
-                        type='time'
-                        placeholder='e.g. 8:00 AM'
-                        className='w-[150px]'
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {services.fields.length > 1 && (
-                <Button
-                  aria-label='delete service'
-                  variant='outline'
-                  size='icon'
-                  className={cn(
-                    index === 0 ? "mt-7" : "mt-2 self-start",
-                    "h-10 w-10"
+                      <FormMessage />
+                    </FormItem>
                   )}
-                  type='button'
-                  onClick={() => services.remove(index)}
-                >
-                  <Cross1Icon className='w-5 h-5 text-destructive' />
-                </Button>
-              )}
-            </div>
-          ))}
-          <Button
-            type='button'
-            variant='secondary'
-            size='sm'
-            onClick={() => services.append({ title: "", day: "", time: "" })}
-          >
-            Add Service
-          </Button>
-        </div>
-
-        <FormField
-          control={form.control}
-          name='mission'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel optional>Mission</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Your church's mission statement"
-                  {...field}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name='vision'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel optional>Vision</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Your church's vision statement"
-                  {...field}
+                <FormField
+                  control={form.control}
+                  name={`services.${index}.day`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormDescription className={cn(index !== 0 && "sr-only")}>
+                        Day
+                      </FormDescription>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={
+                          field.value === "" ? undefined : field.value
+                        }
+                      >
+                        <FormControl>
+                          <SelectTrigger className='w-[200px]'>
+                            <SelectValue placeholder='Select service day' />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {[
+                            "Sunday",
+                            "Monday",
+                            "Tuesday",
+                            "Wednesday",
+                            "Thursday",
+                            "Friday",
+                            "Saturday",
+                          ].map((day) => (
+                            <SelectItem key={day} value={day}>
+                              {day}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormField
+                  control={form.control}
+                  name={`services.${index}.time`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormDescription className={cn(index !== 0 && "sr-only")}>
+                        Time
+                      </FormDescription>
+                      <FormControl>
+                        <Input
+                          type='time'
+                          placeholder='e.g. 8:00 AM'
+                          className='w-[150px]'
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {services.fields.length > 1 && (
+                  <Button
+                    aria-label='delete service'
+                    variant='outline'
+                    size='icon'
+                    className={cn(
+                      index === 0 ? "mt-7" : "mt-2 self-start",
+                      "h-10 w-10"
+                    )}
+                    type='button'
+                    onClick={() => services.remove(index)}
+                  >
+                    <Cross1Icon className='w-5 h-5 text-destructive' />
+                  </Button>
+                )}
+              </div>
+            ))}
+            <Button
+              type='button'
+              variant='secondary'
+              size='sm'
+              onClick={() => services.append({ title: "", day: "", time: "" })}
+            >
+              Add Service
+            </Button>
+          </div>
 
-        <div className='flex gap-6'>
           <FormField
             control={form.control}
-            name='church_size'
+            name='mission'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Church Size</FormLabel>
-                <FormDescription>
-                  An estimate of how many attend your church.
-                </FormDescription>
+                <FormLabel optional>Mission</FormLabel>
                 <FormControl>
-                  <Input
-                    type='number'
-                    inputMode='numeric'
-                    placeholder='e.g. 100'
-                    className='max-w-[120px]'
+                  <Textarea
+                    placeholder="Your church's mission statement"
                     {...field}
-                    onChange={(e) => {
-                      const value = e.currentTarget.valueAsNumber;
-                      field.onChange(value);
-                    }}
+                    value={field.value === null ? "" : field.value}
                   />
                 </FormControl>
                 <FormMessage />
@@ -265,220 +293,270 @@ function ChurchProfileForm() {
 
           <FormField
             control={form.control}
-            name='communion_frequency'
+            name='vision'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Communion Frequency</FormLabel>
-                <FormDescription>
-                  How often do you conduct the Lord&apos;s Supper?
-                </FormDescription>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className='w-[200px]'>
-                      <SelectValue placeholder='Select communion frequency' />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {["Weekly", "Monthly", "Occasionally"].map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
+                <FormLabel optional>Vision</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Your church's vision statement"
+                    {...field}
+                    value={field.value === null ? "" : field.value}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-        </div>
 
-        <div className='space-y-3'>
-          <div>
-            <Label>Church Ministries</Label>
-            <FormArrayMessage
-              error={form.formState.errors.ministries?.root?.message}
+          <div className='flex gap-6'>
+            <FormField
+              control={form.control}
+              name='church_size'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Church Size</FormLabel>
+                  <FormDescription>
+                    An estimate of how many attend your church.
+                  </FormDescription>
+                  <FormControl>
+                    <Input
+                      type='number'
+                      inputMode='numeric'
+                      placeholder='e.g. 100'
+                      className='max-w-[120px]'
+                      {...field}
+                      onChange={(e) => {
+                        const value = e.currentTarget.valueAsNumber;
+                        field.onChange(value);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='communion_frequency'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Communion Frequency</FormLabel>
+                  <FormDescription>
+                    How often do you conduct the Lord&apos;s Supper?
+                  </FormDescription>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className='w-[200px]'>
+                        <SelectValue placeholder='Select communion frequency' />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {["Weekly", "Monthly", "Occasionally"].map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <FormMessage />
+                </FormItem>
+              )}
             />
           </div>
-          {ministries.fields.map((field, index) => (
-            <div key={field.id} className='flex flex-col md:flex-row gap-4'>
-              <FormField
-                control={form.control}
-                name={`ministries.${index}.title`}
-                render={({ field }) => (
-                  <FormItem className='max-w-xs md:flex-1'>
-                    <FormDescription className={cn(index !== 0 && "sr-only")}>
-                      Ministry Title
-                    </FormDescription>
-                    <FormControl>
-                      <Input
-                        placeholder='e.g. Music ministry, Ushering ministry'
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+
+          <div className='space-y-3'>
+            <div>
+              <Label>Church Ministries</Label>
+              <FormArrayMessage
+                error={form.formState.errors.ministries?.root?.message}
               />
-              {ministries.fields.length > 1 && (
-                <Button
-                  aria-label='delete ministry'
-                  variant='outline'
-                  size='icon'
-                  className={cn(
-                    index === 0 ? "mt-7" : "mt-2 self-start",
-                    "h-10 w-10"
-                  )}
-                  type='button'
-                  onClick={() => ministries.remove(index)}
-                >
-                  <Cross1Icon className='w-5 h-5 text-destructive' />
-                </Button>
-              )}
             </div>
-          ))}
+            {ministries.fields.map((field, index) => (
+              <div key={field.id} className='flex flex-col md:flex-row gap-4'>
+                <FormField
+                  control={form.control}
+                  name={`ministries.${index}.title`}
+                  render={({ field }) => (
+                    <FormItem className='max-w-xs md:flex-1'>
+                      <FormDescription className={cn(index !== 0 && "sr-only")}>
+                        Ministry Title
+                      </FormDescription>
+                      <FormControl>
+                        <Input
+                          placeholder='e.g. Music ministry, Ushering ministry'
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {ministries.fields.length > 1 && (
+                  <Button
+                    aria-label='delete ministry'
+                    variant='outline'
+                    size='icon'
+                    className={cn(
+                      index === 0 ? "mt-7" : "mt-2 self-start",
+                      "h-10 w-10"
+                    )}
+                    type='button'
+                    onClick={() => ministries.remove(index)}
+                  >
+                    <Cross1Icon className='w-5 h-5 text-destructive' />
+                  </Button>
+                )}
+              </div>
+            ))}
 
-          <Button
-            type='button'
-            variant='secondary'
-            size='sm'
-            onClick={async () => {
-              const hasNoError = await form.trigger(
-                `ministries.${ministries.fields.length - 1}.title`
-              );
+            <Button
+              type='button'
+              variant='secondary'
+              size='sm'
+              onClick={async () => {
+                const hasNoError = await form.trigger(
+                  `ministries.${ministries.fields.length - 1}.title`
+                );
 
-              if (!hasNoError) return;
+                if (!hasNoError) return;
 
-              ministries.append({ title: "" });
-            }}
-          >
-            Add Ministry
-          </Button>
-        </div>
-
-        <div className='space-y-3'>
-          <div>
-            <Label>Public Services</Label>
-            <FormArrayMessage
-              error={form.formState.errors.public_services?.root?.message}
-            />
+                ministries.append({ title: "" });
+              }}
+            >
+              Add Ministry
+            </Button>
           </div>
-          {public_services.fields.map((field, index) => (
-            <div key={field.id} className='flex flex-col md:flex-row gap-4'>
-              <FormField
-                control={form.control}
-                name={`public_services.${index}.title`}
-                render={({ field }) => (
-                  <FormItem className='max-w-xs md:flex-1'>
-                    <FormDescription className={cn(index !== 0 && "sr-only")}>
-                      Public Service Title
-                    </FormDescription>
-                    <FormControl>
-                      <Input
-                        placeholder='e.g. Weddings, Dedications'
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+
+          <div className='space-y-3'>
+            <div>
+              <Label>Public Services</Label>
+              <FormArrayMessage
+                error={form.formState.errors.public_services?.root?.message}
               />
-              {public_services.fields.length > 1 && (
-                <Button
-                  aria-label='delete public service'
-                  variant='outline'
-                  size='icon'
-                  className={cn(
-                    index === 0 ? "mt-7" : "mt-2 self-start",
-                    "h-10 w-10"
-                  )}
-                  type='button'
-                  onClick={() => public_services.remove(index)}
-                >
-                  <Cross1Icon className='w-5 h-5 text-destructive' />
-                </Button>
-              )}
             </div>
-          ))}
-
-          <Button
-            type='button'
-            variant='secondary'
-            size='sm'
-            onClick={() => public_services.append({ title: "" })}
-          >
-            Add Public Service
-          </Button>
-        </div>
-
-        <div className='space-y-3'>
-          <Label>Confessions</Label>
-          {confessions.fields.map((field, index) => (
-            <div key={field.id} className='flex flex-col md:flex-row gap-4'>
-              <FormField
-                control={form.control}
-                name={`confessions.${index}.title`}
-                render={({ field }) => (
-                  <FormItem className='max-w-xs md:flex-1'>
-                    <FormDescription className={cn(index !== 0 && "sr-only")}>
-                      Title
-                    </FormDescription>
-                    <FormControl>
-                      <Input
-                        placeholder='e.g. Heidelberg Catechism'
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+            {public_services.fields.map((field, index) => (
+              <div key={field.id} className='flex flex-col md:flex-row gap-4'>
+                <FormField
+                  control={form.control}
+                  name={`public_services.${index}.title`}
+                  render={({ field }) => (
+                    <FormItem className='max-w-xs md:flex-1'>
+                      <FormDescription className={cn(index !== 0 && "sr-only")}>
+                        Public Service Title
+                      </FormDescription>
+                      <FormControl>
+                        <Input
+                          placeholder='e.g. Weddings, Dedications'
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {public_services.fields.length > 1 && (
+                  <Button
+                    aria-label='delete public service'
+                    variant='outline'
+                    size='icon'
+                    className={cn(
+                      index === 0 ? "mt-7" : "mt-2 self-start",
+                      "h-10 w-10"
+                    )}
+                    type='button'
+                    onClick={() => public_services.remove(index)}
+                  >
+                    <Cross1Icon className='w-5 h-5 text-destructive' />
+                  </Button>
                 )}
-              />
-              {confessions.fields.length > 1 && (
-                <Button
-                  aria-label='delete confession'
-                  variant='outline'
-                  size='icon'
-                  className={cn(
-                    index === 0 ? "mt-7" : "mt-2 self-start",
-                    "h-10 w-10"
-                  )}
-                  type='button'
-                  onClick={() => confessions.remove(index)}
-                >
-                  <Cross1Icon className='w-5 h-5 text-destructive' />
-                </Button>
-              )}
-            </div>
-          ))}
-          <FormArrayMessage
-            error={form.formState.errors.confessions?.root?.message}
-          />
-          <Button
-            type='button'
-            variant='secondary'
-            size='sm'
-            onClick={() => confessions.append({ title: "" })}
-          >
-            Add Confession
-          </Button>
-        </div>
+              </div>
+            ))}
 
-        <div className='space-x-4 pt-4'>
-          <Button
-            type='button'
-            variant='outline'
-            size='lg'
-            className='shadow-none'
-          >
-            Save and Exit
-          </Button>
-          <Button type='submit' size='lg' className='ml-auto shadow-none'>
-            Save and Continue
-          </Button>
-        </div>
+            <Button
+              type='button'
+              variant='secondary'
+              size='sm'
+              onClick={() => public_services.append({ title: "" })}
+            >
+              Add Public Service
+            </Button>
+          </div>
+
+          <div className='space-y-3'>
+            <Label>Confessions</Label>
+            {confessions.fields.map((field, index) => (
+              <div key={field.id} className='flex flex-col md:flex-row gap-4'>
+                <FormField
+                  control={form.control}
+                  name={`confessions.${index}.title`}
+                  render={({ field }) => (
+                    <FormItem className='max-w-xs md:flex-1'>
+                      <FormDescription className={cn(index !== 0 && "sr-only")}>
+                        Title
+                      </FormDescription>
+                      <FormControl>
+                        <Input
+                          placeholder='e.g. Heidelberg Catechism'
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {confessions.fields.length > 1 && (
+                  <Button
+                    aria-label='delete confession'
+                    variant='outline'
+                    size='icon'
+                    className={cn(
+                      index === 0 ? "mt-7" : "mt-2 self-start",
+                      "h-10 w-10"
+                    )}
+                    type='button'
+                    onClick={() => confessions.remove(index)}
+                  >
+                    <Cross1Icon className='w-5 h-5 text-destructive' />
+                  </Button>
+                )}
+              </div>
+            ))}
+            <FormArrayMessage
+              error={form.formState.errors.confessions?.root?.message}
+            />
+            <Button
+              type='button'
+              variant='secondary'
+              size='sm'
+              onClick={() => confessions.append({ title: "" })}
+            >
+              Add Confession
+            </Button>
+          </div>
+
+          <div className='space-x-4 pt-4'>
+            <Button
+              type='button'
+              variant='outline'
+              size='lg'
+              className='shadow-none'
+              onClick={handleSaveAndExit}
+            >
+              Save and Exit
+            </Button>
+            <Button type='submit' size='lg' className='ml-auto shadow-none'>
+              {form.formState.isSubmitting
+                ? "Saving changes..."
+                : "Save and Continue"}
+            </Button>
+          </div>
+        </fieldset>
       </form>
     </Form>
   );

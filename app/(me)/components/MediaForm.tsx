@@ -21,26 +21,7 @@ import FileDropZone from "@/components/FileDropZone";
 import { churchMediaSchema, type ChurchMediaData } from "@/lib/schema/church";
 
 const defaultValues: ChurchMediaData = {
-  gallery: [
-    {
-      name: "340600010_761266395438334_7612572252988261020_n.jpg",
-      size: 427649,
-      url: "http://res.cloudinary.com/abide-in-the-vine/image/upload/v1694231638/church_finder/jszmnw161ldb7iv9cbsd.jpg",
-      type: "image",
-    },
-    {
-      name: "340573073_257973296588160_124471928567736355_n.jpg",
-      size: 480189,
-      url: "http://res.cloudinary.com/abide-in-the-vine/image/upload/v1694231638/church_finder/jopowf5fis1nkfs014iv.jpg",
-      type: "image",
-    },
-    {
-      name: "336163336_6181772041868578_8339360444359220638_n.jpg",
-      size: 178831,
-      url: "http://res.cloudinary.com/abide-in-the-vine/image/upload/v1694231601/church_finder/dyhj3pz9wm0kw4jl3n74.jpg",
-      type: "image",
-    },
-  ],
+  gallery: [],
 };
 
 function MediaForm() {

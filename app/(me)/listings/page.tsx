@@ -4,8 +4,12 @@ import Link from "next/link";
 
 import { HomeIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { buttonVariants } from "@/components/ui/button";
+import { getChurchListingOfUser } from "@/app/services/church";
+import ChurchList from "../components/ChurchList";
 
 async function MyListingPage() {
+  const churchList = await getChurchListingOfUser();
+
   return (
     <>
       <div className='flex items-center gap-2 h-14 bg-background pl-4 pr-8 border-b text-sm'>
@@ -30,6 +34,10 @@ async function MyListingPage() {
         <p className='text-sm text-muted-foreground'>
           View and manage your church listing here
         </p>
+      </div>
+
+      <div className='p-4'>
+        <ChurchList churchList={churchList} />
       </div>
     </>
   );

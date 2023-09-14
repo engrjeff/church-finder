@@ -23,8 +23,8 @@ export const basicInfoSchema = z.object({
   street: z
     .string({ required_error: "Street Address is required." })
     .nonempty({ message: "Street Address is required." }),
-  welcome_message: z.string().optional(),
-  logo: z.string().optional(),
+  welcome_message: z.string().nullable(),
+  logo: z.string().nullable(),
   full_address: z.string(),
 });
 
@@ -33,7 +33,9 @@ export const churchProfileSchema = z.object({
     .number({ required_error: "Church size is required" })
     .int({ message: "Please enter a whole number" })
     .positive(),
-  communion_frequency: z.enum(["Weekly", "Monthly", "Occasionally"]),
+  communion_frequency: z.string({
+    required_error: "Communion frequency is required",
+  }),
   confessions: z
     .array(
       z.object({
@@ -76,13 +78,23 @@ export const churchProfileSchema = z.object({
       })
     )
     .min(1, { message: "Enter at least 1 service schedule." }),
-  mission: z.string(),
-  vision: z.string(),
+  mission: z
+    .string({ required_error: "Mission is required." })
+    .nonempty({ message: "Mission is required." })
+    .nullable(),
+  vision: z
+    .string({ required_error: "Vision is required." })
+    .nonempty({
+      message: "Vision is required.",
+    })
+    .nullable(),
 });
 
 export const churchContactSchema = z.object({
-  email: z.string().email({ message: "Enter a valid email." }).optional(),
-  website: z.string().url({ message: "Enter a valid website url." }).optional(),
+  email: z
+    .string({ required_error: "Email is required." })
+    .email({ message: "Enter a valid email." }),
+  website: z.string().url({ message: "Enter a valid website url." }).nullable(),
   contact_numbers: z
     .array(
       z.object({
@@ -108,11 +120,15 @@ export const churchContactSchema = z.object({
 });
 
 export const pastorProfileSchema = z.object({
-  pastor_name: z
+  name: z
     .string({ required_error: "Pastor's name is required." })
     .nonempty({ message: "Pastor's name is required." }),
-  bio: z.string(),
-  photo: z.string(),
+  bio: z
+    .string({ required_error: "Bio is required." })
+    .nonempty({ message: "Bio is required." }),
+  photo: z
+    .string({ required_error: "Photo is required." })
+    .nonempty({ message: "Photo is required." }),
 });
 
 export const churchMediaSchema = z.object({

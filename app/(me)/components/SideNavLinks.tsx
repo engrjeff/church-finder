@@ -51,7 +51,7 @@ function SideNavLinks() {
             href={navItem.path}
             className={cn(
               buttonVariants({
-                variant: navItem.path.includes(segment!) ? "light" : "ghost",
+                variant: navItem.path.includes(segment!) ? "default" : "ghost",
               }),
               "w-full justify-start shadow-none"
             )}

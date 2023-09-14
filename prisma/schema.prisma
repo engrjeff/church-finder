@@ -84,6 +84,8 @@ model Church {
   contact_details ChurchContact?
   pastor_details  Pastor?
 
+  steps_completed String[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -98,59 +100,13 @@ model ChurchProfile {
   church    Church @relation(fields: [church_id], references: [id])
   church_id String @unique
 
-  services        ChurchService[]
-  ministries      ChurchMinistry[]
-  public_services ChurchPublicService[]
-  confessions     ChurchConfession[]
+  services        Json[]
+  ministries      Json[]
+  public_services Json[]
+  confessions     Json[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model ChurchService {
-  id    String @id @default(cuid())
-  title String
-  day   String
-  time  String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  church_profile    ChurchProfile? @relation(fields: [church_profile_id], references: [id])
-  church_profile_id String?
-}
-
-model ChurchMinistry {
-  id    String @id @default(cuid())
-  title String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  church_profile    ChurchProfile? @relation(fields: [church_profile_id], references: [id])
-  church_profile_id String?
-}
-
-model ChurchPublicService {
-  id    String @id @default(cuid())
-  title String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  church_profile    ChurchProfile? @relation(fields: [church_profile_id], references: [id])
-  church_profile_id String?
-}
-
-model ChurchConfession {
-  id    String @id @default(cuid())
-  title String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  church_profile    ChurchProfile? @relation(fields: [church_profile_id], references: [id])
-  church_profile_id String?
 }
 
 model ChurchContact {
@@ -158,37 +114,14 @@ model ChurchContact {
   email   String
   website String?
 
-  contact_numbers ChurchContactNumber[]
-  social_links    SocialLink[]
+  contact_numbers Json[]
+  social_links    Json[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   church    Church @relation(fields: [church_id], references: [id])
   church_id String @unique
-}
-
-model ChurchContactNumber {
-  id     String @id @default(cuid())
-  number String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  church_contact    ChurchContact? @relation(fields: [church_contact_id], references: [id])
-  church_contact_id String?
-}
-
-model SocialLink {
-  id       String @id @default(cuid())
-  platform String
-  url      String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  church_contact    ChurchContact? @relation(fields: [church_contact_id], references: [id])
-  church_contact_id String?
 }
 
 model Pastor {

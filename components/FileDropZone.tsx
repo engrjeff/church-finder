@@ -71,16 +71,12 @@ function FileDropZone({
     },
   });
 
-  console.log({ files });
-
   const handleUpload = async () => {
     const uniqueFilesFromCurrent = new Set(fileData?.map((f) => f.name));
 
     const toBeUploaded = files.filter(
       (f) => !uniqueFilesFromCurrent.has(f.name)
     );
-
-    console.log(toBeUploaded.length);
 
     const uploadedFiles = await uploadFiles(toBeUploaded);
 
@@ -95,7 +91,6 @@ function FileDropZone({
 
     filesMethods.clear();
   };
-  console.log({ fileData });
 
   const currentTotal = fileData ? fileData.length + files.length : files.length;
 

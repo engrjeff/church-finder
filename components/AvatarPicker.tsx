@@ -97,6 +97,7 @@ const AvatarPicker = ({
           size='sm'
           className='mt-2'
           onClick={handleUpload}
+          disabled={!acceptedFiles || acceptedFiles.length === 0}
         >
           {loading ? "Uploading..." : "Upload"}
         </Button>

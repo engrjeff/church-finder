@@ -34,34 +34,35 @@ import {
 } from "@/lib/constants";
 import Autocomplete from "@/components/Autocomplete";
 import AvatarPicker from "@/components/AvatarPicker";
-import { createChurch } from "@/app/actions/church";
+import { createChurch, updateChurch } from "@/app/actions/church";
 import Link from "next/link";
 import { arrayToMap, cn } from "@/lib/utils";
 import { toast } from "react-toastify";
-import SuccessDialog from "./SuccessDialog";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const defaultValues: BasicInfoData = {
-  name: "Grace City Church",
-  welcome_message: "Welcome to GCC!",
+  name: "",
+  welcome_message: "",
   logo: "",
-  region: "04",
-  province: "0458",
-  city: "045809",
-  barangay: "045809005",
-  street: "Sitio Ziplang",
+  region: "",
+  province: "",
+  city: "",
+  barangay: "",
+  street: "",
   full_address: "",
 };
 
-function BasicInfoForm() {
+function BasicInfoForm({ basicInfoData }: { basicInfoData?: BasicInfoData }) {
   const form = useForm<BasicInfoData>({
     resolver: zodResolver(basicInfoSchema),
-    defaultValues,
+    defaultValues: basicInfoData ? basicInfoData : defaultValues,
     mode: "onChange",
   });
 
-  const [alertShown, setAlertShown] = React.useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const church_id = searchParams.get("id");
 
   const [regions, setRegions] = useState<Region[]>([]);
   const [provinces, setProvinces] = useState<Province[]>([]);
@@ -118,30 +119,38 @@ function BasicInfoForm() {
   }, [currentProvince, currentRegion, currentCity]);
 
   const onSubmit: SubmitHandler<BasicInfoData> = async (values) => {
-    const result = await createChurch(values);
+    const full_address = getFullAddress();
+
+    if (church_id) {
+      // edit
+      const result = await updateChurch(church_id, { ...values, full_address });
+
+      if (result?.status === "success") {
+        // show toast
+        toast.success("Church updated!");
+
+        router.push(`/listings/edit?id=${church_id}&step=church-profile`, {
+          scroll: true,
+        });
+      }
+
+      return;
+    }
+
+    const result = await createChurch({ ...values, full_address });
 
     if (result?.status === "success") {
       // show toast
       toast.success("Church saved!");
 
-      setAlertShown(true);
+      router.push(`/listings/edit?id=${church_id}&step=church-profile`, {
+        scroll: true,
+      });
     }
   };
 
   const onError: SubmitErrorHandler<BasicInfoData> = (err) => {
     console.log(err);
-  };
-
-  const goToProfileForm = () => {
-    router.push("/listings/new?step=church-profile", {
-      scroll: true,
-    });
-  };
-
-  const cancelGoToProfileForm = () => {
-    router.push("/listings", {
-      scroll: true,
-    });
   };
 
   return (
@@ -159,7 +168,7 @@ function BasicInfoForm() {
                 <FormItem>
                   <FormControl>
                     <AvatarPicker
-                      src={field.value}
+                      src={field.value === null ? undefined : field.value}
                       label='Church Logo'
                       desc='Upload a church logo'
                       onAfterUpload={field.onChange}
@@ -293,14 +302,9 @@ function BasicInfoForm() {
                 name='street'
                 render={({ field }) => (
                   <FormItem>
-                    <FormDescription>
-                      Barangay and Street Address
-                    </FormDescription>
+                    <FormDescription>Street Address</FormDescription>
                     <FormControl>
-                      <Textarea
-                        placeholder='e.g. Peter Street, Brgy. San Jose'
-                        {...field}
-                      />
+                      <Textarea placeholder='e.g. Church Street' {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -338,6 +342,7 @@ function BasicInfoForm() {
                     <Textarea
                       placeholder='A welcome message for your potential guests'
                       {...field}
+                      value={!field.value ? "" : field.value}
                     />
                   </FormControl>
                   <FormMessage />
@@ -354,23 +359,21 @@ function BasicInfoForm() {
               >
                 Cancel
               </Link>
-              <Button type='submit' size='lg' className='ml-auto shadow-none'>
-                {form.formState.isSubmitting ? "Saving..." : "Save"}
-              </Button>
+              {church_id ? (
+                <Button type='submit' size='lg' className='ml-auto shadow-none'>
+                  {form.formState.isSubmitting ? "Saving..." : "Save Changes"}
+                </Button>
+              ) : (
+                <Button type='submit' size='lg' className='ml-auto shadow-none'>
+                  {form.formState.isSubmitting
+                    ? "Saving..."
+                    : "Save and Continue"}
+                </Button>
+              )}
             </div>
           </fieldset>
         </form>
       </Form>
-      <SuccessDialog
-        action={goToProfileForm}
-        cancelAction={cancelGoToProfileForm}
-        open={alertShown}
-        onOpenChange={setAlertShown}
-        title='Setup the church profile'
-        message='You may now create the profile for your church!'
-        cancelText='Later'
-        okText='Take me there'
-      />
     </>
   );
 }
